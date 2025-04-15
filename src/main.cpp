@@ -116,7 +116,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     TrayMenuObserver trayMenu;
     _tray.Intialize(_hWnd,hIcon,"Volume",&trayMenu);
     #else
-    _tray.Intialize(_hWnd,hIcon,WND_TITLE,NULL);
+    _tray.Intialize(_hWnd,hIcon,(LPSTR)WND_TITLE,NULL);
     #endif
     _isProcessing = false;
     //create control

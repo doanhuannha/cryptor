@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "config.h"
-unsigned long getStrLength(char const* str);
-void addStr(char* str,char* strAdd);
+unsigned long getStrLength(const char* str);
+void addStr(char* str,const char* strAdd);
 
 void joinbyte(char* str,int lengthStr,char* strAdd,int lengthStrAdd);
 
@@ -17,9 +17,9 @@ void copyBit(char const* source,int sourceBitIndex,char* dest,int destBitIndex);
 void leftShift(char* address,int bitIndexStart,int bitIndexEnd);
 void rightShift(char* address,int bitIndexStart,int bitIndexEnd);
 char * longToChar(unsigned long value);
-void splitXML(char *str,char *splitStr1,char *splitStr2,char *result);
+void splitXML(char *str,const char *splitStr1,const char *splitStr2,char *result);
 long lt(int x,int y);
-long * findStr(char *str,char *strToFind);
+long * findStr(char *str,const char *strToFind);
 void rotateBit(char& byte);
 int writeLog(const char* logFile,const char* msg,bool newLine);
 

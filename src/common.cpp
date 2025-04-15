@@ -1,5 +1,5 @@
 #include "..\inc\common.h"
-unsigned long getStrLength(char const* str)
+unsigned long getStrLength(const char* str)
 {
 	long i=0;
 	while(str[i]!=0)
@@ -8,7 +8,7 @@ unsigned long getStrLength(char const* str)
 	}
 	return i;
 }
-void addStr(char* str,char* strAdd)
+void addStr(char* str,const char* strAdd)
 {
 	int i=0;
 	int j=0;
@@ -277,7 +277,7 @@ char * longToChar(unsigned long value)
 	return returnStr;
 
 }
-void splitXML(char *str,char *splitStr1,char *splitStr2,char *result)
+void splitXML(char *str,const char *splitStr1,const char *splitStr2,char *result)
 {
 	long *pos1=findStr(str,splitStr1);
 	if (pos1[0]!=0)
@@ -329,7 +329,7 @@ long lt(int x,int y)
 
 }
 
-long * findStr(char *str,char *strToFind)
+long * findStr(char *str,const char *strToFind)
 {
 	long *returnValue=new long;
 	long strLen=getStrLength(str);

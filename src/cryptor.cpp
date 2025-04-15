@@ -365,7 +365,7 @@ int _stdcall embedFile(char *frontFile,char * behideFile, char * behideFileName,
 	//Add information about the tag file
 	char tag[MAX_CHAR];
 	tag[0]=0;
-	addStr(tag,"<FN>");
+	addStr(tag,"<>FN");
 	addStr(tag,behideFileName);
 	addStr(tag,"</FN>");
 	addStr(tag,"<FL>");
