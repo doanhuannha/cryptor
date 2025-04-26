@@ -446,3 +446,41 @@ int RegRead(HKEY hRootKey,const char* subKey,const char* keyValName,LPDWORD pdwT
     }
     lRv = RegCloseKey(hKey);
 }
+unsigned char* loadFile(const char* filename, int& fileSize) {
+    // Open the file using CreateFile
+    HANDLE hFile = CreateFile(
+        filename, // File name
+        GENERIC_READ,      // Desired access: read
+        0,                 // Share mode: no sharing
+        NULL,              // Security attributes: NULL for default
+        OPEN_EXISTING,     // Open an existing file
+        FILE_ATTRIBUTE_NORMAL, // Normal file attributes
+        NULL               // No template file
+    );
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        return NULL;
+    }
+
+    // Get the file size
+    fileSize = GetFileSize(hFile, NULL);
+    if (fileSize == INVALID_FILE_SIZE) {
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    // Allocate memory for the file contents
+    unsigned char* buffer = new unsigned char[fileSize];
+
+    // Read the file content into the buffer
+    DWORD bytesRead;
+    if (!ReadFile(hFile, buffer, fileSize, &bytesRead, NULL)) {
+        delete[] buffer;
+        CloseHandle(hFile);
+        return NULL;
+    }
+    // Close the file
+    CloseHandle(hFile);
+    // Return the pointer to the file content
+    return buffer;
+}

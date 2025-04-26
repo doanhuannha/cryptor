@@ -1,5 +1,6 @@
 #include "..\inc\main.h"
 APP_ICON ICON "rc/ico/app.ico"
+EYE_ICON ICON "rc/ico/eye.ico"
 #ifdef FAKE_PRO
 WIN_ICON ICON "rc/ico/win.ico"
 TRAY_ICON ICON "rc/ico/tray.ico"

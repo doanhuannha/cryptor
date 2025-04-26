@@ -58,28 +58,70 @@ switch (WPARAM(wParam)){
                   
              }
              break;
-        case BT_OK:
+        case BT_VIEW:
+        	{
+        		
+				int fileCount = SendMessage(_hListInputFiles.hwnd, (UINT)LB_GETCOUNT, 0, 0);
+				char** selectedFiles = new char*[fileCount];//max 128
+				for (int i = 0; i < fileCount; ++i) {
+				    selectedFiles[i] = new char[_MAX_PATH];
+				    SendMessage(_hListInputFiles.hwnd,(UINT)LB_GETTEXT,(WPARAM)i,(LPARAM)selectedFiles[i]);
+				}
+				
+				
+				
+				char* password = new char[255];
+				GetWindowText(_hTxtPwd,password,255);
+				//ImageWindow viewer(_hThisInstance, itemArray, count);
+        		
+             	
+             	const char* className = "ImageViewerWindowClass";
+			    WNDCLASS wc = {};
+			    wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(EYE_ICON));
+			    wc.lpfnWndProc = ImageWindowProc;
+			    wc.hInstance = _hThisInstance;//GetModuleHandle(NULL);
+			    wc.lpszClassName = className;
+			    //wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+			    RegisterClass(&wc);
+			    
+			    
+			
+			    HWND hwnd = CreateWindowEx(
+			        0,
+			        className,
+			        "View",
+			        WS_OVERLAPPEDWINDOW,
+			        CW_USEDEFAULT, CW_USEDEFAULT,
+			        800, 600,
+			        NULL, NULL,
+			        _hThisInstance,
+			        NULL
+			    );
+			    //ShowWindow(hwnd, SW_MAXIMIZE);
+        		_viewer.Intialize(hwnd, selectedFiles, fileCount, password,_isOldVersion);							
+			}
+			break;
+		case BT_OK:
              {
                    if(_isProcessing){ 
                        MessageBox(hwnd, "Thread is running", "Info Example", MB_OK | MB_ICONINFORMATION);
                        break;
                    }
-                   
                    _isProcessing = true;
                    DWORD threadId;
                    CreateThread(NULL, 0, ThreadProc, NULL, 0, &threadId);
                   
              }
              break;
+        \
         case BT_SHOWPWD:
              {
-                   if(SendMessage(_hTxtPwd ,EM_GETPASSWORDCHAR,0,0) == '*')
-                        SendMessage(_hTxtPwd,EM_SETPASSWORDCHAR,0,0);
-                   else
-                        SendMessage(_hTxtPwd,EM_SETPASSWORDCHAR,(WPARAM)'*',0);
-                   SetFocus(_hTxtPwd);
-                   SetFocus(_hOptShowPwd.hwnd);
-
+               if(SendMessage(_hTxtPwd ,EM_GETPASSWORDCHAR,0,0) == '*')
+                    SendMessage(_hTxtPwd,EM_SETPASSWORDCHAR,0,0);
+               else
+                    SendMessage(_hTxtPwd,EM_SETPASSWORDCHAR,(WPARAM)'*',0);
+               SetFocus(_hTxtPwd);
+               SetFocus(_hOptShowPwd.hwnd);
              }
              break;
         case BT_BROWSEFILES:

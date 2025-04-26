@@ -118,40 +118,40 @@ else{
             }
             else{ //decrypt
                 if(_isMsgMode){ //text message 
-                
+                	//???
                 }           
                 else if(_isUsePwd){ //use password
                     if(_isUseMask){ //with mask
-                         char* tempPath = new char[_MAX_PATH];
-                         char* outFileName = new char[_MAX_PATH];
-                         GetTempPath(_MAX_PATH,tempPath);
-                         strcat(tempPath,"\\mask_file\\");
-                         CreateDirectory(tempPath,NULL);
-                         if(_isOldVersion) isOK = splitEmbedFileOld(workingFile,tempPath,password,false,outFileName)==0;
-                         else isOK = splitEmbedFile(workingFile,tempPath,password,false,outFileName)==0;
-                         if(isOK){
-                              
-                              strcat(tempPath,outFileName);
-                              char* newFileName = new char[_MAX_PATH];
-                              int foundIndex = findLastString(workingFile,'\\');
-                              bytecpy(newFileName, workingFile,0,foundIndex+1);
-                              newFileName[foundIndex+1]='\0';
-                              strcat(newFileName,outFileName);
-                              CopyFile(tempPath,newFileName,false);
-                              DeleteFile(tempPath);
-                              if(strcmp(newFileName,workingFile)!=0) DeleteFile(workingFile);
-                              delete newFileName;
-                         }
-                         else{
-                              writeLog(logFile,"Can not process file: ",false);
-                              writeLog(logFile,workingFile,true);
-                              err++;
-                         }
-                         GetTempPath(_MAX_PATH,tempPath);
-                         strcat(tempPath,"\\mask_file\\");
-                         RemoveDirectory(tempPath);
-                         delete tempPath;
-                         delete outFileName;
+						char* tempPath = new char[_MAX_PATH];
+						char* outFileName = new char[_MAX_PATH];
+						GetTempPath(_MAX_PATH,tempPath);
+						strcat(tempPath,"mask_file\\");
+						CreateDirectory(tempPath,NULL);
+						if(_isOldVersion) isOK = splitEmbedFileOld(workingFile,tempPath,password,false,outFileName)==0;
+						else isOK = splitEmbedFile(workingFile,tempPath,password,false,outFileName)==0;
+						
+						if(isOK){
+						  strcat(tempPath,outFileName);
+						  char* newFileName = new char[_MAX_PATH];
+						  int foundIndex = findLastString(workingFile,'\\');
+						  bytecpy(newFileName, workingFile,0,foundIndex+1);
+						  newFileName[foundIndex+1]='\0';
+						  strcat(newFileName,outFileName);
+						  CopyFile(tempPath,newFileName,false);
+						  DeleteFile(tempPath);
+						  if(strcmp(newFileName,workingFile)!=0) DeleteFile(workingFile);
+						  delete newFileName;
+						}
+						else{
+						  writeLog(logFile,"Can not process file: ",false);
+						  writeLog(logFile,workingFile,true);
+						  err++;
+						}
+						GetTempPath(_MAX_PATH,tempPath);
+						strcat(tempPath,"mask_file\\");
+						RemoveDirectory(tempPath);
+						delete tempPath;
+						delete outFileName;	
                     }
                     else if(_isTextCrypt){
                          isOK = cryptFileAsText(workingFile,password,false)==0;

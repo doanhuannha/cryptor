@@ -28,4 +28,5 @@ int RegRead(HKEY hRootKey,const char* subKey,const char* keyValName,LPDWORD pdwT
 int RegWrite(HKEY hRootKey,const char* subKey,const char* keyValName,DWORD regType,const BYTE *lpData,DWORD cbData);
 int RegDelete(HKEY hRootKey,const char* subKey,const char* delKey);
 int RegDeleteVal(HKEY hRootKey,const char* subKey,const char* delVal);
+unsigned char* loadFile(const char* filename, int& fileSize);
 

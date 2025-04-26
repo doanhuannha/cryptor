@@ -1,12 +1,12 @@
 #include <windows.h>
 
 #include "tray.h"
-#include "cryptor.h"
 
 #define APP_ICON        0x101
-#define WIN_ICON        0x102
-#define TRAY_ICON        0x103
-#define BCKIMG_BMP       0x104
+#define EYE_ICON       0x102
+#define WIN_ICON        0x103
+#define TRAY_ICON        0x104
+#define BCKIMG_BMP       0x105
 
 #define BT_OK 0x200
 #define BT_CANCEL 0x201
@@ -21,6 +21,7 @@
 #define BT_SHOWPWD 0x20A
 #define BT_CRYPTTEXTOPT 0x20B
 #define BT_OLDVERSIONOPT 0x20C
+#define BT_VIEW 0x20D
 
 #define OPT_ENCRYPT 0x301
 #define OPT_DECRYPT 0x302
@@ -39,11 +40,18 @@
 #define WND_TITLE "My Computer"
 #define WND_TITLE_PROCESS "My Computer - Processing..."
 #else
-#define WND_TITLE "DHN Cryptor v2.1 (10/2010)"
-#define WND_TITLE_PROCESS "DHN Cryptor v2.1 (10/2010) - Processing..."
+#define WND_TITLE "DHN Cryptor v2.2 (05/2025)"
+#define WND_TITLE_PROCESS "DHN Cryptor v2.2 (05/2025) - Processing..."
 #endif
 
+#include "..\inc\viewer.h"
 
+struct ImageViewerParam {
+    unsigned char* fileData;
+    DWORD dataSize;
+    char* fileName;
+    
+};
 
 struct WINDOWCONTROL{
       HWND hwnd; 
@@ -56,6 +64,7 @@ WINDOWCONTROL _hBtBrowseFile1;
 WINDOWCONTROL _hBtBrowseFile2;
 WINDOWCONTROL _hBtBrowseFile3;
 WINDOWCONTROL _hBtOK;
+WINDOWCONTROL _hBtView;
 WINDOWCONTROL _hBtCancel;
 WINDOWCONTROL _hListInputFiles;
 
@@ -74,8 +83,7 @@ HWND _hTxtKeyFile;
 HWND _hTxtMaskFile;
 HWND _hTxtPwd;
 HWND _hTxtMsg;
-HWND _hWnd;
-HWND _hSubWnd;
+
 HWND _hTxtCountFile;
 
 bool _isEncrypt;
@@ -84,13 +92,18 @@ bool _isUseMask;
 bool _isTextCrypt;
 bool _isOldVersion;
 bool _isMsgMode;
+bool _isView;
 
 bool _isProcessing;
 
-HBITMAP _hBckImg;
+HWND _hWnd;
+HINSTANCE _hThisInstance;
+ImageViewer _viewer;
 
 void ParseOpt();
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK ImageWindowProc (HWND, UINT, WPARAM, LPARAM);
+
 LRESULT CALLBACK ControlProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void DeleteItemsInList(HWND hList);
 void RefreshScrollList(WINDOWCONTROL hList);
@@ -99,4 +112,4 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter);
 int DoProcessParam(const char* param);
 int SetEnable(bool enable);
 
-
+char szClassName[] = "Cryptor-DHN";

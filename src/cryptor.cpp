@@ -116,8 +116,7 @@ int text_decode(const char* xData,int data_len,const char* key, char* retValue){
 	delete data;
 	return data_len;
 }
-int _stdcall cryptFileAsText(char* inFile,char* pwd,bool isCrypted)
-{
+int _stdcall cryptFileAsText(char* inFile,char* pwd,bool isCrypted){
     
 	//long lngPwd = getStrLength(pwd);
 	HANDLE hInFile;
@@ -193,8 +192,7 @@ int _stdcall cryptFileAsText(char* inFile,char* pwd,bool isCrypted)
 	return 0;
 
 }
-int _stdcall cryptFile(char *inFile,char *pwd,bool isCrypted)
-{
+int _stdcall cryptFile(char *inFile,char *pwd,bool isCrypted){
 	long lngPwd = getStrLength(pwd);
 	HANDLE hInFile;
 	DWORD i=0;
@@ -270,8 +268,7 @@ int _stdcall cryptFile(char *inFile,char *pwd,bool isCrypted)
 	return 0;
 
 }
-int _stdcall embedFile(char *frontFile,char * behideFile, char * behideFileName,char * pwd)
-{
+int _stdcall embedFile(char *frontFile,char * behideFile, char * behideFileName,char * pwd){
 	long lngPwd=getStrLength(pwd);
 	//crypt behideFile
 	//Add behideFile after frontFile
@@ -365,7 +362,7 @@ int _stdcall embedFile(char *frontFile,char * behideFile, char * behideFileName,
 	//Add information about the tag file
 	char tag[MAX_CHAR];
 	tag[0]=0;
-	addStr(tag,"<>FN");
+	addStr(tag,"<FN>");
 	addStr(tag,behideFileName);
 	addStr(tag,"</FN>");
 	addStr(tag,"<FL>");
@@ -395,137 +392,37 @@ int _stdcall embedFile(char *frontFile,char * behideFile, char * behideFileName,
 	return 0;
 
 }
-int _stdcall splitEmbedFile(char *embedFile,char * outPath,char * pwd, bool split,char *outFileName)
-{
-	long lngPwd=getStrLength(pwd);
-	DWORD  dwBytesRead, dwBytesWritten, dwPos;
-	HANDLE hFile = CreateFile(embedFile,     // open ONE.TXT 
-		GENERIC_READ|GENERIC_WRITE,                 // open for reading and writing 
-		0,                            // do not share 
-		NULL,                         // no security 
-		OPEN_EXISTING,                // existing file only 
-		FILE_ATTRIBUTE_NORMAL,        // normal file 
-		NULL);                        // no attr. template 
-
-	if (hFile == INVALID_HANDLE_VALUE) 
-	{ 
-		CloseHandle(hFile);
-		// process error
-		
-		return 1;
-	}
-	dwPos = SetFilePointer(hFile, -1, NULL, FILE_END); //set current pointer to End
-	char offset;
-	char tag[MAX_CHAR];
-	ReadFile(hFile, &offset, 1, &dwBytesRead, NULL);// read the last byte
-	if (offset <0) //error on file
-	{ 
-		CloseHandle(hFile);	
-		return 2;
-	}
-	dwPos = SetFilePointer(hFile, -(offset+1), NULL, FILE_CURRENT);
-	ReadFile(hFile, tag, offset, &dwBytesRead, NULL);
-	tag[dwBytesRead]=0;
-	// crypt tag
-	int j=0;
-	DWORD i;
-	for (i=0;i<(DWORD)offset;i++)
-	{
-		tag[i]=tag[i]^pwd[j];
-		j++;
-		if (j>=lngPwd) j=0;
-	}
-	//get size of behide file
-	char len[MAX_CHAR];
-	len[0]=0;
-	splitXML(tag,"<FL>","</FL>",len);
-	long fileLen=0;
-	for(i=0;i<getStrLength(len);i++)
-	{
-		fileLen=(len[i]-48)*lt(10,i)+fileLen;
-	}
-	//get name of behide file
-	len[0]=0;
-	splitXML(tag,"<FN>","</FN>",len);
+//*
+int _stdcall splitEmbedFile(char *embedFile,char * outPath,char * pwd, bool split, char *outFileName){
+	DWORD  dataSize;
+    unsigned char* rawData = splitEmbedData(embedFile, pwd, split, dataSize, outFileName);
 	//create hanlde for out file
-	char outFile[MAX_CHAR];
-	outFile[0]=0;
-	addStr(outFile,outPath);
-	addStr(outFile,"/");
-	addStr(outFile,len);
-	HANDLE hOutFile = CreateFile(outFile,   // open outFile 
-    GENERIC_WRITE,                // open for writing 
-    0,                            // do not share 
-    NULL,                         // no security 
-    CREATE_ALWAYS,                  // open or create 
-    FILE_ATTRIBUTE_NORMAL,        // normal file 
-    NULL);                        // no attr. template 
-
+	DWORD  dwBytesWritten;
+	char* outFilePath = new char[_MAX_PATH];
+	outFilePath[0]=0;
+	addStr(outFilePath,outPath);
+	addStr(outFilePath,outFileName);
+	//MessageBox(NULL, outFilePath, "Info Message", MB_OK | MB_ICONINFORMATION);
+	HANDLE hOutFile = CreateFile(outFilePath,   // open outFile 
+	    GENERIC_WRITE,                // open for writing 
+	    0,                            // do not share 
+	    NULL,                         // no security 
+	    CREATE_ALWAYS,                  // open or create 
+	    FILE_ATTRIBUTE_NORMAL,        // normal file 
+	    NULL                        // no attr. template 
+	);
 	if (hOutFile == INVALID_HANDLE_VALUE) 
 	{ 
-		CloseHandle(hFile); 
 		CloseHandle(hOutFile);
 		return 3;
 	}
-	//put cursor at the begin of the behide file
-	dwPos = SetFilePointer(hFile, -(fileLen+offset), NULL, FILE_CURRENT);
-	//Read and write file
-	char *buff;
-	buff=new char [MAX_BUFFER];
-	j=0;
-	long byteCount = 0;
-	char* pByteCount;
-	pByteCount = (char*)&byteCount;
-	do 
-	{
-		
-		if (ReadFile(hFile, buff, MAX_BUFFER, &dwBytesRead, NULL)) 
-		{ 
-			dwPos = SetFilePointer(hOutFile, 0, NULL, FILE_END); 
-			LockFile(hOutFile, dwPos, 0, dwPos + dwBytesRead, 0);
-			//crypt here
-			
-			for (i=0;i<dwBytesRead;i++)
-			{
-                byteCount++;
-				if(buff[i]!=0 && buff[i]!=pwd[j]) buff[i]=buff[i]^pwd[j];
-				buff[i] = buff[i]^pByteCount[0];
-                buff[i] = buff[i]^pByteCount[1];
-                buff[i] = buff[i]^pByteCount[2];
-                buff[i] = buff[i]^pByteCount[3];
-                rightShift(&buff[i],0,7);
-                rotateBit(buff[i]);
-				j++;
-				if (j>=lngPwd) j=0;
-			}
-			//////////////////////
-			WriteFile(hOutFile, buff, dwBytesRead, 
-				&dwBytesWritten, NULL); 
-			UnlockFile(hOutFile, dwPos, 0, dwPos + dwBytesRead, 0); 
-		} 
-	} while (dwBytesRead == MAX_BUFFER); 
-	delete []buff;
-	dwPos = SetFilePointer(hOutFile, -(offset+1), NULL, FILE_CURRENT);
-	SetEndOfFile(hOutFile);
-	/////////////////////////////////////////////////////////////////
-
+	WriteFile(hOutFile, rawData, dataSize, &dwBytesWritten, NULL); 
 	CloseHandle(hOutFile);
-	////split embed file out of front file
-	if (split) 
-	{
-		dwPos = SetFilePointer(hFile, -(fileLen+offset+1), NULL, FILE_CURRENT);
-		SetEndOfFile(hFile);
-	}
-	CloseHandle(hFile);
-	for(i=0;i<getStrLength(len);i++)
-	{
-		outFileName[i]=len[i];
-	}
-	outFileName[i]=0;
+	
 	return 0;
 }
-int _stdcall cryptFileByFile(char *inFile,char *pwdFile,bool isCrypted)
-{
+
+int _stdcall cryptFileByFile(char *inFile,char *pwdFile,bool isCrypted){
 	HANDLE hInFile,hPwdFile;
 	DWORD i=0;
 	DWORD  dwBytesRead, dwBytesWritten, dwPos;
@@ -657,8 +554,7 @@ int _stdcall cryptFileByFile(char *inFile,char *pwdFile,bool isCrypted)
 	return 0;
 }
 //old version
-int _stdcall cryptFileOld(char *inFile,char *pwd,bool isCrypted)
-{
+int _stdcall cryptFileOld(char *inFile,char *pwd,bool isCrypted){
 	long lngPwd = getStrLength(pwd);
 	HANDLE hInFile;
 	DWORD i=0;
@@ -712,8 +608,7 @@ int _stdcall cryptFileOld(char *inFile,char *pwd,bool isCrypted)
 	return 0;
 
 }
-int _stdcall embedFileOld(char *frontFile,char * behideFile, char * behideFileName,char * pwd)
-{
+int _stdcall embedFileOld(char *frontFile,char * behideFile, char * behideFileName,char * pwd){
 	long lngPwd=getStrLength(pwd);
 	//crypt behideFile
 	//Add behideFile after frontFile
@@ -827,127 +722,36 @@ int _stdcall embedFileOld(char *frontFile,char * behideFile, char * behideFileNa
 	return 0;
 
 }
-int _stdcall splitEmbedFileOld(char *embedFile,char * outPath,char * pwd, bool split,char *outFileName)
-{
-	long lngPwd=getStrLength(pwd);
-	DWORD  dwBytesRead, dwBytesWritten, dwPos;
-	HANDLE hFile = CreateFile(embedFile,     // open ONE.TXT 
-		GENERIC_READ|GENERIC_WRITE,                 // open for reading and writing 
-		0,                            // do not share 
-		NULL,                         // no security 
-		OPEN_EXISTING,                // existing file only 
-		FILE_ATTRIBUTE_NORMAL,        // normal file 
-		NULL);                        // no attr. template 
-
-	if (hFile == INVALID_HANDLE_VALUE) 
-	{ 
-		CloseHandle(hFile);
-		// process error
-		
-		return 1;
-	}
-	dwPos = SetFilePointer(hFile, -1, NULL, FILE_END); //set current pointer to End
-	char offset;
-	char tag[MAX_CHAR];
-	ReadFile(hFile, &offset, 1, &dwBytesRead, NULL);// read the last byte
-	if (offset <0) //error on file
-	{ 
-		CloseHandle(hFile);	
-		return 2;
-	}
-	dwPos = SetFilePointer(hFile, -(offset+1), NULL, FILE_CURRENT);
-	ReadFile(hFile, tag, offset, &dwBytesRead, NULL);
-	tag[dwBytesRead]=0;
-	// crypt tag
-	int j=0;
-	DWORD i;
-	for (i=0;i<(DWORD)offset;i++)
-	{
-		tag[i]=tag[i]^pwd[j];
-		j++;
-		if (j>=lngPwd) j=0;
-	}
-	//get size of behide file
-	char len[MAX_CHAR];
-	len[0]=0;
-	splitXML(tag,"<FL>","</FL>",len);
-	long fileLen=0;
-	for(i=0;i<getStrLength(len);i++)
-	{
-		fileLen=(len[i]-48)*lt(10,i)+fileLen;
-	}
-	//get name of behide file
-	len[0]=0;
-	splitXML(tag,"<FN>","</FN>",len);
+int _stdcall splitEmbedFileOld(char *embedFile,char * outPath,char * pwd, bool split, char *outFileName){
+	DWORD  dataSize;
+    unsigned char* rawData = splitEmbedDataOld(embedFile, pwd, split, dataSize, outFileName);
 	//create hanlde for out file
-	char outFile[MAX_CHAR];
-	outFile[0]=0;
-	addStr(outFile,outPath);
-	addStr(outFile,"/");
-	addStr(outFile,len);
-	HANDLE hOutFile = CreateFile(outFile,   // open outFile 
-    GENERIC_WRITE,                // open for writing 
-    0,                            // do not share 
-    NULL,                         // no security 
-    CREATE_ALWAYS,                  // open or create 
-    FILE_ATTRIBUTE_NORMAL,        // normal file 
-    NULL);                        // no attr. template 
-
+	DWORD  dwBytesWritten;
+	char* outFilePath = new char[_MAX_PATH];
+	outFilePath[0]=0;
+	addStr(outFilePath,outPath);
+	addStr(outFilePath,outFileName);
+	//MessageBox(NULL, outFilePath, "Info Message", MB_OK | MB_ICONINFORMATION);
+	HANDLE hOutFile = CreateFile(outFilePath,   // open outFile 
+	    GENERIC_WRITE,                // open for writing 
+	    0,                            // do not share 
+	    NULL,                         // no security 
+	    CREATE_ALWAYS,                  // open or create 
+	    FILE_ATTRIBUTE_NORMAL,        // normal file 
+	    NULL                        // no attr. template 
+	);
 	if (hOutFile == INVALID_HANDLE_VALUE) 
 	{ 
-		CloseHandle(hFile); 
 		CloseHandle(hOutFile);
 		return 3;
 	}
-	//put cursor at the begin of the behide file
-	dwPos = SetFilePointer(hFile, -(fileLen+offset), NULL, FILE_CURRENT);
-	//Read and write file
-	char *buff;
-	buff=new char [MAX_BUFFER];
-	j=0;
-	do 
-	{
-		
-		if (ReadFile(hFile, buff, MAX_BUFFER, &dwBytesRead, NULL)) 
-		{ 
-			dwPos = SetFilePointer(hOutFile, 0, NULL, FILE_END); 
-			LockFile(hOutFile, dwPos, 0, dwPos + dwBytesRead, 0);
-			//crypt here
-			
-			for (i=0;i<dwBytesRead;i++)
-			{
-				if(buff[i]!=0 && buff[i]!=pwd[j]) buff[i]=buff[i]^pwd[j];
-				j++;
-				if (j>=lngPwd) j=0;
-			}
-			//////////////////////
-			WriteFile(hOutFile, buff, dwBytesRead, 
-				&dwBytesWritten, NULL); 
-			UnlockFile(hOutFile, dwPos, 0, dwPos + dwBytesRead, 0); 
-		} 
-	} while (dwBytesRead == MAX_BUFFER); 
-	delete []buff;
-	dwPos = SetFilePointer(hOutFile, -(offset+1), NULL, FILE_CURRENT);
-	SetEndOfFile(hOutFile);
-	/////////////////////////////////////////////////////////////////
-
+	WriteFile(hOutFile, rawData, dataSize, &dwBytesWritten, NULL); 
 	CloseHandle(hOutFile);
-	////split embed file out of front file
-	if (split) 
-	{
-		dwPos = SetFilePointer(hFile, -(fileLen+offset+1), NULL, FILE_CURRENT);
-		SetEndOfFile(hFile);
-	}
-	CloseHandle(hFile);
-	for(i=0;i<getStrLength(len);i++)
-	{
-		outFileName[i]=len[i];
-	}
-	outFileName[i]=0;
+	
 	return 0;
 }
-int _stdcall cryptFileByFileOld(char *inFile,char *pwdFile,bool isCrypted)
-{
+
+int _stdcall cryptFileByFileOld(char *inFile,char *pwdFile,bool isCrypted){
 	HANDLE hInFile,hPwdFile;
 	DWORD i=0;
 	DWORD  dwBytesRead, dwBytesWritten, dwPos;
@@ -1056,3 +860,201 @@ int _stdcall cryptFileByFileOld(char *inFile,char *pwdFile,bool isCrypted)
 	CloseHandle(hPwdFile);
 	return 0;
 }
+unsigned char* _stdcall splitEmbedDataOld(const char* embedFile,const char* pwd, bool split, DWORD& outSize, char *outFileName){
+	char* msg = new char[22];
+	long lngPwd=getStrLength(pwd);
+	DWORD  dwBytesRead, dwBytesWritten, dwPos;
+	HANDLE hFile = CreateFile(embedFile,     // open ONE.TXT 
+		GENERIC_READ|GENERIC_WRITE,                 // open for reading and writing 
+		0,                            // do not share 
+		NULL,                         // no security 
+		OPEN_EXISTING,                // existing file only 
+		FILE_ATTRIBUTE_NORMAL,        // normal file 
+		NULL);                        // no attr. template 
+
+	if (hFile == INVALID_HANDLE_VALUE) 
+	{ 
+		CloseHandle(hFile);
+		// process error
+		
+		return NULL;
+	}
+	dwPos = SetFilePointer(hFile, -1, NULL, FILE_END); //set current pointer to End
+	char offset;
+	char tag[MAX_CHAR];
+	ReadFile(hFile, &offset, 1, &dwBytesRead, NULL);// read the last byte
+	if (offset <0) //error on file
+	{ 
+		CloseHandle(hFile);	
+		return NULL;
+	}
+	dwPos = SetFilePointer(hFile, -(offset+1), NULL, FILE_CURRENT);
+	ReadFile(hFile, tag, offset, &dwBytesRead, NULL);
+	tag[dwBytesRead]=0;
+	// crypt tag
+	int j=0;
+	DWORD i;
+	for (i=0;i<(DWORD)offset;i++)
+	{
+		tag[i]=tag[i]^pwd[j];
+		j++;
+		if (j>=lngPwd) j=0;
+	}
+	//get size of behide file
+	char metaData[MAX_CHAR];
+	metaData[0]=0;
+	splitXML(tag,"<FL>","</FL>",metaData);
+	long fileLen=0;
+	for(i=0;i<getStrLength(metaData);i++)
+	{
+		fileLen=(metaData[i]-48)*lt(10,i)+fileLen;
+	}
+	//get name of behide file
+	metaData[0]=0;
+	splitXML(tag,"<FN>","</FN>",metaData);// len is the name
+	//put cursor at the begin of the behide file
+	dwPos = SetFilePointer(hFile, -(fileLen+offset), NULL, FILE_CURRENT);
+	//Read and write file
+	unsigned char* fileData = NULL;
+	int curIndex = 0, curSize = 0;
+	char *buff;
+	buff=new char [MAX_BUFFER];
+	j=0;
+	do 
+	{
+		if (ReadFile(hFile, buff, MAX_BUFFER, &dwBytesRead, NULL)) 
+		{ 
+			//crypt here
+			
+			for (i=0;i<dwBytesRead;i++)
+			{
+				if(buff[i]!=0 && buff[i]!=pwd[j]) buff[i]=buff[i]^pwd[j];
+				j++;
+				if (j>=lngPwd) j=0;
+			}
+			//////////////////////
+			curSize = curSize + dwBytesRead;
+			fileData = (unsigned char*)realloc(fileData, curSize + dwBytesRead);
+			memcpy(fileData + curIndex, buff, dwBytesRead);
+			curIndex = curSize;
+		} 
+	} while (dwBytesRead == MAX_BUFFER);
+	if (split) 
+	{
+		dwPos = SetFilePointer(hFile, -(fileLen+offset+1), NULL, FILE_CURRENT);
+		SetEndOfFile(hFile);
+	}
+	CloseHandle(hFile);
+	delete []buff;
+	outSize = curSize;
+	for(i=0;i<getStrLength(metaData);i++)
+	{
+		outFileName[i]=metaData[i];
+	}
+	outFileName[i]=0;
+	return fileData;
+}
+unsigned char* _stdcall splitEmbedData(const char *embedFile,const char * pwd, bool split, DWORD& outSize, char *outFileName){
+	long lngPwd=getStrLength(pwd);
+	DWORD  dwBytesRead, dwBytesWritten, dwPos;
+	HANDLE hFile = CreateFile(embedFile,     // open ONE.TXT 
+		GENERIC_READ|GENERIC_WRITE,                 // open for reading and writing 
+		0,                            // do not share 
+		NULL,                         // no security 
+		OPEN_EXISTING,                // existing file only 
+		FILE_ATTRIBUTE_NORMAL,        // normal file 
+		NULL);                        // no attr. template 
+
+	if (hFile == INVALID_HANDLE_VALUE) 
+	{ 
+		CloseHandle(hFile);
+		// process error
+		
+		return NULL;
+	}
+	dwPos = SetFilePointer(hFile, -1, NULL, FILE_END); //set current pointer to End
+	char offset;
+	char tag[MAX_CHAR];
+	ReadFile(hFile, &offset, 1, &dwBytesRead, NULL);// read the last byte
+	if (offset <0) //error on file
+	{ 
+		CloseHandle(hFile);	
+		return NULL;
+	}
+	dwPos = SetFilePointer(hFile, -(offset+1), NULL, FILE_CURRENT);
+	ReadFile(hFile, tag, offset, &dwBytesRead, NULL);
+	tag[dwBytesRead]=0;
+	// crypt tag
+	int j=0;
+	DWORD i;
+	for (i=0;i<(DWORD)offset;i++)
+	{
+		tag[i]=tag[i]^pwd[j];
+		j++;
+		if (j>=lngPwd) j=0;
+	}
+	//get size of behide file
+	char metaData[MAX_CHAR];
+	metaData[0]=0;
+	splitXML(tag,"<FL>","</FL>",metaData);
+	long fileLen=0;
+	for(i=0;i<getStrLength(metaData);i++)
+	{
+		fileLen=(metaData[i]-48)*lt(10,i)+fileLen;
+	}
+	//get name of behide file
+	metaData[0]=0;
+	splitXML(tag,"<FN>","</FN>",metaData);// len is the name
+	//put cursor at the begin of the behide file
+	dwPos = SetFilePointer(hFile, -(fileLen+offset), NULL, FILE_CURRENT);
+	//Read and write file
+	unsigned char* fileData = NULL;
+	int curIndex = 0, curSize = 0;
+	char *buff;
+	buff=new char [MAX_BUFFER];
+	j=0;
+	long byteCount = 0;
+	char* pByteCount;
+	pByteCount = (char*)&byteCount;
+	do 
+	{
+		if (ReadFile(hFile, buff, MAX_BUFFER, &dwBytesRead, NULL)) 
+		{ 
+			//crypt here
+			
+			for (i=0;i<dwBytesRead;i++)
+			{
+                byteCount++;
+				if(buff[i]!=0 && buff[i]!=pwd[j]) buff[i]=buff[i]^pwd[j];
+				buff[i] = buff[i]^pByteCount[0];
+                buff[i] = buff[i]^pByteCount[1];
+                buff[i] = buff[i]^pByteCount[2];
+                buff[i] = buff[i]^pByteCount[3];
+                rightShift(&buff[i],0,7);
+                rotateBit(buff[i]);
+				j++;
+				if (j>=lngPwd) j=0;
+			}
+			//////////////////////
+			curSize = curSize + dwBytesRead;
+			fileData = (unsigned char*)realloc(fileData, curSize + dwBytesRead);
+			memcpy(fileData + curIndex, buff, dwBytesRead);
+			curIndex = curSize;
+		} 
+	} while (dwBytesRead == MAX_BUFFER);
+	if (split) 
+	{
+		dwPos = SetFilePointer(hFile, -(fileLen+offset+1), NULL, FILE_CURRENT);
+		SetEndOfFile(hFile);
+	}
+	CloseHandle(hFile);
+	delete []buff;
+	outSize = curSize;
+	for(i=0;i<getStrLength(metaData);i++)
+	{
+		outFileName[i]=metaData[i];
+	}
+	outFileName[i]=0;
+	return fileData;
+}
+

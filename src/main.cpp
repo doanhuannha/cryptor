@@ -3,7 +3,7 @@
 //SHBrowseForFolder//http://msdn.microsoft.com/en-us/library/bb762115(v=VS.85).aspx
 
 /*  Make the class name into a global variable  */
-char szClassName[ ] = "Cryptor-DHN";
+
 #ifdef FAKE_PRO
 class TrayMenuObserver: public ITrayMenuObserver{
 public:
@@ -27,6 +27,7 @@ public:
     }
 };
 #endif
+
 int WINAPI WinMain (HINSTANCE hThisInstance,
                     HINSTANCE hPrevInstance,
                     LPSTR lpszArgument,
@@ -34,7 +35,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
 {
     HWND hwnd = FindWindow(szClassName,NULL);
-    
+    _hThisInstance = hThisInstance;
     if(hwnd!=NULL){
          COPYDATASTRUCT cpd;
          cpd.dwData = 0;
@@ -439,7 +440,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
    //row 7
    //radio
    posX = rootX + 5; posY += ctrlH + 10;
-   ctrlW = 200;
+   ctrlW = 150;
    _hOptFileAss.hwnd = CreateWindowEx(
 			0,
             "Button",
@@ -454,10 +455,23 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
    //check registry val
    SendMessage(_hWnd,WM_COMMAND,OPT_ASSOCIATEFILES,0xFF);
    
-   posX += ctrlW + 5;
    
-   posX = rootX + 240;
-   ctrlW = 80;
+   posX = rootX + 200;
+   ctrlW = 60;
+   _hBtView.hwnd = CreateWindowEx(
+			0,
+            "Button",
+            "View",
+            WS_BORDER | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            posX, posY,
+            ctrlW, ctrlH,
+            hwnd, 
+            (HMENU)BT_VIEW,
+            hThisInstance,
+            NULL);
+    EnableWindow(_hBtView.hwnd,false);
+    
+    posX += ctrlW + 5;        
    _hBtOK.hwnd = CreateWindowEx(
 			0,
             "Button",
@@ -556,8 +570,7 @@ int DoProcessParam(const char* param){
 
 /*  This function is called by the Windows function DispatchMessage()  */
 
-LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
     _tray.WindowProcedure(message,wParam,lParam);
     switch (message)                  /* handle the messages */
     {
@@ -580,7 +593,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
              }           
              break;
         case WM_COMMAND:
-             #include "main_command.h"
+        	 _isView = false;
+             #include "main_commands.h"
              break;
         case WM_SYSCOMMAND:
              switch (WPARAM(wParam)){
@@ -703,7 +717,7 @@ bool ValidateInput(HWND hwnd, char* keyFile, char* maskFile){
     return fail;
 }
 DWORD WINAPI ThreadProc(LPVOID lpParameter){
-       #include "thread_proc.h"
+       #include "main_thread_proc.h"
 }
 int SetEnable(bool enable){
      EnableWindow(_hOptEncrypt.hwnd,enable);
@@ -748,8 +762,13 @@ int SetEnable(bool enable){
          EnableWindow(_hBtBrowseFile2.hwnd,_isUseMask&&_isEncrypt&&_isUsePwd&&!_isMsgMode);
          EnableWindow(_hOldVersion.hwnd,!_isEncrypt&&!_isMsgMode);
          EnableWindow(_hOptKeyFile.hwnd,!_isMsgMode);
-         //_isOldVersion
+         EnableWindow(_hBtView.hwnd,!_isEncrypt&&!_isMsgMode);
+		 //_isOldVersion
      }
      return 0;
 }
 
+LRESULT CALLBACK ImageWindowProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
+	return _viewer.WindowProc(hwnd, message, wParam, lParam);
+	//else return DefWindowProc (hwnd, message, wParam, lParam);
+}
