@@ -16,7 +16,7 @@ private:
     HINSTANCE _hThisInstance;
     bool _isFullscreen;
 	RECT _windowedRect; // Saves window position & size
-	HWND _hWnd, _hPWnd;
+	HWND _hWnd;
 	char** _files;
 	int _fileCount;
 	char _pwd[128];

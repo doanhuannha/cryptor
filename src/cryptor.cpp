@@ -368,6 +368,7 @@ int _stdcall embedFile(char *frontFile,char * behideFile, char * behideFileName,
 	addStr(tag,"<FL>");
 	addStr(tag,longToChar(fileLng));
 	addStr(tag,"</FL>");
+	
 	//dwPos = SetFilePointer(hAppend, 0, NULL, FILE_END); //set current pointer
 	//crypt tag
 	j=0;
@@ -398,7 +399,7 @@ int _stdcall splitEmbedFile(char *embedFile,char * outPath,char * pwd, bool spli
     unsigned char* rawData = splitEmbedData(embedFile, pwd, split, dataSize, outFileName);
 	//create hanlde for out file
 	DWORD  dwBytesWritten;
-	char* outFilePath = new char[_MAX_PATH];
+	char outFilePath[_MAX_PATH];
 	outFilePath[0]=0;
 	addStr(outFilePath,outPath);
 	addStr(outFilePath,outFileName);
@@ -412,13 +413,14 @@ int _stdcall splitEmbedFile(char *embedFile,char * outPath,char * pwd, bool spli
 	    NULL                        // no attr. template 
 	);
 	if (hOutFile == INVALID_HANDLE_VALUE) 
-	{ 
+	{
+		delete[] rawData; 
 		CloseHandle(hOutFile);
 		return 3;
 	}
 	WriteFile(hOutFile, rawData, dataSize, &dwBytesWritten, NULL); 
 	CloseHandle(hOutFile);
-	
+	delete[] rawData;
 	return 0;
 }
 
@@ -727,7 +729,7 @@ int _stdcall splitEmbedFileOld(char *embedFile,char * outPath,char * pwd, bool s
     unsigned char* rawData = splitEmbedDataOld(embedFile, pwd, split, dataSize, outFileName);
 	//create hanlde for out file
 	DWORD  dwBytesWritten;
-	char* outFilePath = new char[_MAX_PATH];
+	char outFilePath[_MAX_PATH];
 	outFilePath[0]=0;
 	addStr(outFilePath,outPath);
 	addStr(outFilePath,outFileName);
@@ -741,13 +743,14 @@ int _stdcall splitEmbedFileOld(char *embedFile,char * outPath,char * pwd, bool s
 	    NULL                        // no attr. template 
 	);
 	if (hOutFile == INVALID_HANDLE_VALUE) 
-	{ 
+	{
+		delete[] rawData; 
 		CloseHandle(hOutFile);
 		return 3;
 	}
 	WriteFile(hOutFile, rawData, dataSize, &dwBytesWritten, NULL); 
 	CloseHandle(hOutFile);
-	
+	delete[] rawData;
 	return 0;
 }
 
@@ -922,7 +925,8 @@ unsigned char* _stdcall splitEmbedDataOld(const char* embedFile,const char* pwd,
 	j=0;
 	do 
 	{
-		if (ReadFile(hFile, buff, MAX_BUFFER, &dwBytesRead, NULL)) 
+		int leftOverSize = fileLen - curSize;
+		if (ReadFile(hFile, buff, leftOverSize>=MAX_BUFFER? MAX_BUFFER: leftOverSize, &dwBytesRead, NULL)) 
 		{ 
 			//crypt here
 			
@@ -946,7 +950,7 @@ unsigned char* _stdcall splitEmbedDataOld(const char* embedFile,const char* pwd,
 	}
 	CloseHandle(hFile);
 	delete []buff;
-	outSize = curSize;
+	outSize = fileLen;
 	for(i=0;i<getStrLength(metaData);i++)
 	{
 		outFileName[i]=metaData[i];
@@ -1018,7 +1022,8 @@ unsigned char* _stdcall splitEmbedData(const char *embedFile,const char * pwd, b
 	pByteCount = (char*)&byteCount;
 	do 
 	{
-		if (ReadFile(hFile, buff, MAX_BUFFER, &dwBytesRead, NULL)) 
+		int leftOverSize = fileLen - curSize;
+		if (ReadFile(hFile, buff, leftOverSize>=MAX_BUFFER ? MAX_BUFFER: leftOverSize, &dwBytesRead, NULL)) 
 		{ 
 			//crypt here
 			
@@ -1049,7 +1054,7 @@ unsigned char* _stdcall splitEmbedData(const char *embedFile,const char * pwd, b
 	}
 	CloseHandle(hFile);
 	delete []buff;
-	outSize = curSize;
+	outSize = fileLen;
 	for(i=0;i<getStrLength(metaData);i++)
 	{
 		outFileName[i]=metaData[i];

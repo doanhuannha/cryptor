@@ -11,9 +11,8 @@ HBITMAP ImageViewer::s_hBitmap;
 
 ImageViewer::Intialize(HWND hWnd ,char** files, int fileCount, char* pwd, bool oldCrypt) {
 	
-	_hPWnd = hWnd;
+	_hWnd = hWnd;
 	ShowWindow(_hWnd, SW_MAXIMIZE);
-	_hWnd = NULL;
 	_isFullscreen = false;
 	
 	_oldCrypt = oldCrypt;
@@ -180,13 +179,15 @@ void ImageViewer::Next(bool reverse){
 		return;	
 	}
 	
-	DWORD dataSize = 0;
+	
 	char outFileName[_MAX_PATH];
 
 	const char* workingFile = _files[_curImgIndex];
 	unsigned char* fileData = NULL;
+	DWORD dataSize = 0;
 	if(_oldCrypt) fileData = splitEmbedDataOld(workingFile, _pwd, false, dataSize, outFileName);
 	else fileData = splitEmbedData(workingFile, _pwd,false, dataSize, outFileName);
+	
 	if(fileData!=NULL)
 	{
 		Show(fileData, dataSize, outFileName);
@@ -201,7 +202,7 @@ void ImageViewer::Show(unsigned char* jpegData, int jpegSize, const char* title)
     }
     
     s_hBitmap = LoadImageFromMemory(jpegData, jpegSize);
-    
+    delete[] jpegData;
     if (!s_hBitmap){
     	MessageBox(NULL, "Invalid image", "Info Example", MB_OK | MB_ICONINFORMATION);
     	return;
